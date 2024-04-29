@@ -1,75 +1,86 @@
+prog1.c
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#define FIFO_PATH "myfifo"
+#define FIFO_NAME "/tmp/my_fifo"
 
 int main() {
-    int fd;
-    char message[] = "Hello, this is a message from the writer process!";
-    char buffer[256];
+    int fifo_fd;
 
-    // Create the FIFO (named pipe)
-    mkfifo(FIFO_PATH, 0666);
+    // Create FIFO
+    if (mkfifo(FIFO_NAME, 0666) == -1) {
+        perror("mkfifo");
+        exit(EXIT_FAILURE);
+    }
 
-    // Open the FIFO for writing
-    fd = open(FIFO_PATH, O_WRONLY);
-    if (fd == -1) {
+    printf("FIFO created successfully\n");
+
+    // Open FIFO for writing
+    fifo_fd = open(FIFO_NAME, O_WRONLY);
+    if (fifo_fd == -1) {
         perror("open");
         exit(EXIT_FAILURE);
     }
 
-    // Write the message to the FIFO
-    if (write(fd, message, strlen(message)) == -1) {
+    printf("FIFO opened for writing\n");
+
+    // Write data to FIFO
+    const char *message = "Hello from Writer";
+    if (write(fifo_fd, message, sizeof(message)) == -1) {
         perror("write");
         exit(EXIT_FAILURE);
     }
 
-    // Close the FIFO
-    close(fd);
+    printf("Data written to FIFO\n");
 
-    printf("Writer process has written the message to the FIFO.\n");
-
-    // Open the FIFO for reading
-    fd = open(FIFO_PATH, O_RDONLY);
-    if (fd == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-    }
-
-    // Read the message from the FIFO
-    ssize_t bytes_read = read(fd, buffer, sizeof(buffer));
-    if (bytes_read == -1) {
-        perror("read");
-        exit(EXIT_FAILURE);
-    }
-
-    // Null-terminate the string
-    buffer[bytes_read] = '\0';
-
-    // Close the FIFO
-    close(fd);
-
-    printf("Reader process has read the message from the FIFO:\n%s\n", buffer);
-
-    // Remove the FIFO (named pipe)
-    unlink(FIFO_PATH);
+    // Close FIFO
+    close(fifo_fd);
 
     return 0;
 }
 
+prog2.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
+#define FIFO_NAME "/tmp/my_fifo"
 
+int main() {
+    int fifo_fd;
+    char buf[256];
 
-//Execution cmd:
-//gcc program_name.c -o program_name
-//./program_name
+    // Open FIFO for reading
+    fifo_fd = open(FIFO_NAME, O_RDONLY);
+    if (fifo_fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
 
+    printf("FIFO opened for reading\n");
 
+    // Read data from FIFO
+    ssize_t num_bytes = read(fifo_fd, buf, sizeof(buf));
+    if (num_bytes == -1) {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
 
+    // Null-terminate the received data
+    buf[num_bytes] = '\0';
 
+    printf("Received message: %s\n", buf);
 
+    // Close FIFO
+    close(fifo_fd);
 
+    return 0;
+}
