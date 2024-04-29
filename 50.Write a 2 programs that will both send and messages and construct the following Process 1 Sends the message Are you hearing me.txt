@@ -1,0 +1,110 @@
+Receiver:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define MSG_SIZE 128
+
+// Define a structure for the message
+struct message {
+    long mtype;
+    char mtext[MSG_SIZE];
+};
+
+int main() {
+    key_t key;
+    int msgid;
+    struct message msg;
+
+    // Generate a unique key for the message queue
+    if ((key = ftok("msgq", 'B')) == -1) {
+        perror("ftok");
+        exit(1);
+    }
+
+    // Create a message queue
+    if ((msgid = msgget(key, 0644 | IPC_CREAT)) == -1) {
+        perror("msgget");
+        exit(1);
+    }
+
+    // Receive the message
+    if (msgrcv(msgid, &msg, sizeof(msg.mtext), 1, 0) == -1) {
+        perror("msgrcv");
+        exit(1);
+    }
+
+    printf("Message received: %s\n", msg.mtext);
+
+    // Reply to the message
+    strcpy(msg.mtext, "Loud and Clear");
+    if (msgsnd(msgid, &msg, sizeof(msg.mtext), 0) == -1) {
+        perror("msgsnd");
+        exit(1);
+    }
+
+    printf("Reply sent: %s\n", msg.mtext);
+
+    return 0;
+}
+
+
+Sender:
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define MSG_SIZE 128
+
+// Define a structure for the message
+struct message {
+    long mtype;
+    char mtext[MSG_SIZE];
+};
+
+int main() {
+    key_t key;
+    int msgid;
+    struct message msg;
+
+    // Generate a unique key for the message queue
+    if ((key = ftok("msgq", 'B')) == -1) {
+        perror("ftok");
+        exit(1);
+    }
+
+    // Create a message queue
+    if ((msgid = msgget(key, 0644 | IPC_CREAT)) == -1) {
+        perror("msgget");
+        exit(1);
+    }
+
+    // Send the message
+    msg.mtype = 1; // Message type
+    strcpy(msg.mtext, "Are you hearing me?"); // Message content
+    if (msgsnd(msgid, &msg, sizeof(msg.mtext), 0) == -1) {
+        perror("msgsnd");
+        exit(1);
+    }
+
+    printf("Message sent: %s\n", msg.mtext);
+
+    return 0;
+}
+
+
+
+//Execution Cmd:
+//gcc sender.c -o sender
+//./sender
+
+//gcc receiver.c -o receiver
+//./receiver
+
+
+

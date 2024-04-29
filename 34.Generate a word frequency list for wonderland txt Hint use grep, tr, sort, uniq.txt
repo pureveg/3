@@ -1,0 +1,29 @@
+1.Extract Words:
+Use grep to extract words from the file, and tr to convert all text to lowercase for case-insensitive counting.
+
+grep -oE '\w+' wonderland.txt | tr '[:upper:]' '[:lower:]'
+
+2.Sort Words:
+Use sort to sort the words alphabetically.
+
+
+grep -oE '\w+' wonderland.txt | tr '[:upper:]' '[:lower:]' | sort
+
+3.Count Word Frequencies:
+Use uniq -c to count the frequency of each word.
+
+
+grep -oE '\w+' wonderland.txt | tr '[:upper:]' '[:lower:]' | sort | uniq -c
+
+4.Sort by Frequency:
+To sort the word frequencies in descending order, use sort -nr.
+
+
+grep -oE '\w+' wonderland.txt | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr
+
+5.Putting it all together, the final command to generate a word frequency list for wonderland.txt is:
+
+
+grep -oE '\w+' wonderland.txt | tr '[:upper:]' '[:lower:]' | sort | uniq -c | sort -nr
+
+This command extracts words from the file, converts them to lowercase, sorts them alphabetically, counts the frequency of each word, and then sorts the word frequencies in descending order.

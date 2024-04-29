@@ -1,0 +1,36 @@
+#!/bin/
+
+# FTP server details
+FTP_SERVER="10.10.13.16"
+FTP_USER="username"
+FTP_PASS="password"
+REMOTE_FILE="filename.txt"
+
+# Check if file exists on FTP server
+if lftp -e "find $REMOTE_FILE; bye" -u "$FTP_USER,$FTP_PASS" "$FTP_SERVER" | grep -q "$REMOTE_FILE"; then
+    echo "File exists. Downloading..."
+    lftp -e "get $REMOTE_FILE; bye" -u "$FTP_USER,$FTP_PASS" "$FTP_SERVER"
+    echo "Download complete."
+else
+    echo "File does not exist on FTP server."
+fi
+
+
+
+O/p:
+
+To execute the script, save it to a file (e.g., download_file.sh), grant execute permissions (chmod +x download_file.sh), and then run it:
+
+
+./download_file.sh
+
+Replace download_file.sh with the actual filename if you've named the script differently.
+If the file exists on the FTP server, the script will output:
+
+
+File exists. Downloading...
+Download complete.
+If the file does not exist, it will output:
+
+
+File does not exist on FTP server.

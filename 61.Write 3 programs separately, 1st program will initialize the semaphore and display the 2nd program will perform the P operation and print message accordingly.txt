@@ -1,0 +1,144 @@
+1st Program - Initialize Semaphore and Display Semaphore ID init_semaphore:
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+
+#define SEM_NAME "/my_semaphore"
+
+int main() {
+    sem_t *sem;
+
+    // Create or open the semaphore
+    sem = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0666, 1);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Display semaphore ID
+    printf("Semaphore ID: %p\n", (void *)sem);
+
+    // Close the semaphore
+    if (sem_close(sem) == -1) {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+
+//Execution cmd:
+//gcc init_semaphore.c -o init_semaphore -pthread
+//./init_semaphore
+
+
+
+2nd Program - Perform P Operation (wait) on Semaphore p_operation:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+
+#define SEM_NAME "/my_semaphore"
+
+int main() {
+    sem_t *sem;
+
+    // Open the semaphore
+    sem = sem_open(SEM_NAME, O_RDWR);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Perform the P operation (wait)
+    printf("Waiting for semaphore...\n");
+    if (sem_wait(sem) == -1) {
+        perror("sem_wait");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Semaphore acquired!\n");
+
+    // Close the semaphore
+    if (sem_close(sem) == -1) {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+//Execution cmd:
+//gcc p_operation.c -o p_operation -pthread
+//./p_operation
+
+
+
+3rd Program - Perform V Operation (signal) on Semaphore v_operation:
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <fcntl.h>
+
+#define SEM_NAME "/my_semaphore"
+
+int main() {
+    sem_t *sem;
+
+    // Open the semaphore
+    sem = sem_open(SEM_NAME, O_RDWR);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Perform the V operation (signal)
+    printf("Releasing semaphore...\n");
+    if (sem_post(sem) == -1) {
+        perror("sem_post");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Semaphore released!\n");
+
+    // Close the semaphore
+    if (sem_close(sem) == -1) {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+//Execution cmd:
+//gcc v_operation.c -o v_operation -pthread
+//./v_operation
+
+
+
+
+
+

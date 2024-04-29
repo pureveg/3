@@ -1,0 +1,111 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <semaphore.h>
+#include <fcntl.h>
+
+#define SEM_NAME "/my_semaphore"
+
+int main() {
+    sem_t *sem;
+
+    // Create a semaphore
+    sem = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0666, 1);
+    if (sem == SEM_FAILED) {
+        perror("sem_open");
+        exit(EXIT_FAILURE);
+    }
+
+    // Fork a child process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid == 0) { // Child process
+        printf("Child process: Waiting for semaphore...\n");
+
+        // Wait for the semaphore
+        if (sem_wait(sem) == -1) {
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Child process: Semaphore acquired!\n");
+        printf("Child process: Releasing semaphore...\n");
+
+        // Release the semaphore
+        if (sem_post(sem) == -1) {
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Child process: Semaphore released!\n");
+    } else { // Parent process
+        printf("Parent process: Waiting for semaphore...\n");
+
+        // Wait for the semaphore
+        if (sem_wait(sem) == -1) {
+            perror("sem_wait");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Parent process: Semaphore acquired!\n");
+        printf("Parent process: Releasing semaphore...\n");
+
+        // Release the semaphore
+        if (sem_post(sem) == -1) {
+            perror("sem_post");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Parent process: Semaphore released!\n");
+    }
+
+    // Close and unlink the semaphore
+    if (sem_close(sem) == -1) {
+        perror("sem_close");
+        exit(EXIT_FAILURE);
+    }
+
+    if (sem_unlink(SEM_NAME) == -1) {
+        perror("sem_unlink");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+//Execution cmd:
+//gcc program_name.c -o program_name -lpthread
+//./program_name
+
+
+//Theory
+
+The sem.h and semaphore.h headers are used for working with semaphores in C, but they are part of different standards and provide different functionality. Below, I'll outline the main differences between them:
+
+Standardization:
+sem.h: This header file is part of the System V IPC (Inter-Process Communication) mechanism, which is a Unix standard.
+semaphore.h: This header file is part of the POSIX (Portable Operating System Interface) standard, which aims to provide a standardized operating system interface.
+Functionality:
+sem.h: Provides functions and data structures for working with System V semaphores, including semget, semctl, and semop.
+semaphore.h: Provides functions and data structures for working with POSIX semaphores, including sem_open, sem_wait, sem_post, and sem_close.
+IPC Mechanism:
+sem.h: System V semaphores are part of the System V IPC mechanism, which includes shared memory, message queues, and semaphores.
+semaphore.h: POSIX semaphores are part of the POSIX IPC mechanism, which also includes shared memory, message queues, and other synchronization primitives.
+Portability:
+sem.h: While System V IPC mechanisms are supported on many Unix-like operating systems, the specific implementation details may vary, leading to potential portability issues.
+semaphore.h: POSIX semaphores are designed to be more portable across different Unix-like operating systems that support POSIX standards.
+Ease of Use:
+sem.h: Working with System V semaphores typically involves more boilerplate code and error handling compared to POSIX semaphores.
+semaphore.h: POSIX semaphores provide a simpler and cleaner interface for working with semaphores, making them easier to use and understand.

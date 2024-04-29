@@ -1,0 +1,65 @@
+Iterative Echo Server:
+
+import socket
+
+HOST = '127.0.0.1'
+PORT = 8080
+BUFFER_SIZE = 1024
+
+def iterative_echo_server():
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
+        server_socket.bind((HOST, PORT))
+        print("Server listening on port", PORT)
+
+        while True:
+            data, addr = server_socket.recvfrom(BUFFER_SIZE)
+            print("Received:", data.decode(), "from", addr)
+            server_socket.sendto(data, addr)
+
+if __name__ == "__main__":
+    iterative_echo_server()
+
+
+
+
+Concurrent Echo Server:
+
+
+import socket
+import threading
+
+HOST = '127.0.0.1'
+PORT = 8080
+BUFFER_SIZE = 1024
+
+def handle_client(server_socket):
+    while True:
+        data, addr = server_socket.recvfrom(BUFFER_SIZE)
+        print("Received:", data.decode(), "from", addr)
+        server_socket.sendto(data, addr)
+
+def concurrent_echo_server():
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
+        server_socket.bind((HOST, PORT))
+        print("Server listening on port", PORT)
+
+        threads = []
+        for _ in range(5):  # Adjust the number of threads as needed
+            thread = threading.Thread(target=handle_client, args=(server_socket,))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+if __name__ == "__main__":
+    concurrent_echo_server()
+
+
+
+
+
+//Execution steps:
+1.Open a terminal and run the server of your choice (python iterative_echo_server.py or python concurrent_echo_server.py).
+2.Open another terminal window and type telnet 127.0.0.1 8080 to connect to the server.
+3.Type any message and press Enter. You should see the message echoed back to you.

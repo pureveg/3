@@ -1,0 +1,31 @@
+1.Script to check if a file is executable:
+
+#!/bin/bash
+
+# Take filename as input
+read -p "Enter the filename: " filename
+
+# Check if the file is executable
+if [ -x "$filename" ]; then
+    echo "The file $filename is executable."
+else
+    echo "The file $filename is not executable."
+fi
+
+
+
+2.Script to remove execute permissions if the file is executable:
+
+#!/bin/bash
+
+# Take filename as input
+read -p "Enter the filename: " filename
+
+# Check if the file is executable
+if [ -x "$filename" ]; then
+    # Remove execute permissions
+    chmod -x "$filename"
+    echo "Execute permissions removed from $filename."
+else
+    echo "The file $filename is not executable."
+fi

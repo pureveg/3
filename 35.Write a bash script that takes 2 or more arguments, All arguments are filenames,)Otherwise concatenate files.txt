@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Check if the number of arguments is less than 2
+if [ "$#" -lt 2 ]; then
+    echo "Error: Please provide 2 or more filenames as arguments."
+    exit 1
+fi
+
+# Check if all files exist
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        echo "Error: File '$file' does not exist."
+        exit 1
+    fi
+done
+
+# Concatenate files
+cat "$@" > concatenated_file.txt
+echo "Files concatenated successfully. Result saved in 'concatenated_file.txt'."
