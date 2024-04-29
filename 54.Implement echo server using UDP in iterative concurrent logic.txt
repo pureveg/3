@@ -1,65 +1,114 @@
-Iterative Echo Server:
+Server: 
 
-import socket
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
-HOST = '127.0.0.1'
-PORT = 8080
-BUFFER_SIZE = 1024
+#define PORT 9999
+#define BUFFER_SIZE 4096
 
-def iterative_echo_server():
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
-        server_socket.bind((HOST, PORT))
-        print("Server listening on port", PORT)
+int main() {
+    struct sockaddr_in server_addr, client_addr;
+    int sockfd, client_len, recv_len;
+    char buffer[BUFFER_SIZE];
 
-        while True:
-            data, addr = server_socket.recvfrom(BUFFER_SIZE)
-            print("Received:", data.decode(), "from", addr)
-            server_socket.sendto(data, addr)
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
 
-if __name__ == "__main__":
-    iterative_echo_server()
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(PORT);
 
+    if (bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
 
+    printf("Server is running on port %d\n", PORT);
 
+    while (1) {
+        printf("\nWaiting to receive message...\n");
 
-Concurrent Echo Server:
+        client_len = sizeof(client_addr);
+        if ((recv_len = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len)) < 0) {
+            perror("recvfrom failed");
+            exit(EXIT_FAILURE);
+        }
 
+        printf("Received %d bytes from %s:%d\n", recv_len, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+        printf("Data received: %s\n", buffer);
 
-import socket
-import threading
+        if (sendto(sockfd, buffer, recv_len, 0, (struct sockaddr*)&client_addr, client_len) < 0) {
+            perror("sendto failed");
+            exit(EXIT_FAILURE);
+        }
+    }
 
-HOST = '127.0.0.1'
-PORT = 8080
-BUFFER_SIZE = 1024
+    return 0;
+}
 
-def handle_client(server_socket):
-    while True:
-        data, addr = server_socket.recvfrom(BUFFER_SIZE)
-        print("Received:", data.decode(), "from", addr)
-        server_socket.sendto(data, addr)
+Client: 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
-def concurrent_echo_server():
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_socket:
-        server_socket.bind((HOST, PORT))
-        print("Server listening on port", PORT)
+#define PORT 9999
+#define BUFFER_SIZE 4096
 
-        threads = []
-        for _ in range(5):  # Adjust the number of threads as needed
-            thread = threading.Thread(target=handle_client, args=(server_socket,))
-            thread.start()
-            threads.append(thread)
+int main() {
+    struct sockaddr_in server_addr;
+    int sockfd;
+    char buffer[BUFFER_SIZE];
+    socklen_t server_len;
 
-        for thread in threads:
-            thread.join()
+    // Create a UDP socket
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+        perror("socket creation failed");
+        exit(EXIT_FAILURE);
+    }
 
-if __name__ == "__main__":
-    concurrent_echo_server()
+    // Initialize server address structure
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(PORT);
 
+    while (1) {
+        printf("Enter message to send (type 'exit' to quit): ");
+        fgets(buffer, BUFFER_SIZE, stdin);
 
+        // Remove newline character from the input
+        buffer[strcspn(buffer, "\n")] = 0;
 
+        if (strcmp(buffer, "exit") == 0) {
+            break;
+        }
 
+        // Send message to the server
+        server_len = sizeof(server_addr);
+        if (sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&server_addr, server_len) < 0) {
+            perror("sendto failed");
+            exit(EXIT_FAILURE);
+        }
 
-//Execution steps:
-1.Open a terminal and run the server of your choice (python iterative_echo_server.py or python concurrent_echo_server.py).
-2.Open another terminal window and type telnet 127.0.0.1 8080 to connect to the server.
-3.Type any message and press Enter. You should see the message echoed back to you.
+        // Receive response from server
+        if (recvfrom(sockfd, buffer, BUFFER_SIZE, 0, NULL, NULL) < 0) {
+            perror("recvfrom failed");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Received response: %s\n", buffer);
+    }
+
+    // Close the socket
+    close(sockfd);
+
+    return 0;
+}
