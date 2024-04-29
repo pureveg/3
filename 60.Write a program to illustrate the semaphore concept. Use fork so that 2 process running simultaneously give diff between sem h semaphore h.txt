@@ -9,14 +9,12 @@
 int main() {
     sem_t *sem;
 
-    // Create a semaphore
     sem = sem_open(SEM_NAME, O_CREAT | O_EXCL, 0666, 1);
     if (sem == SEM_FAILED) {
         perror("sem_open");
         exit(EXIT_FAILURE);
     }
 
-    // Fork a child process
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -24,10 +22,9 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    if (pid == 0) { // Child process
+    if (pid == 0) { 
         printf("Child process: Waiting for semaphore...\n");
 
-        // Wait for the semaphore
         if (sem_wait(sem) == -1) {
             perror("sem_wait");
             exit(EXIT_FAILURE);
@@ -36,17 +33,15 @@ int main() {
         printf("Child process: Semaphore acquired!\n");
         printf("Child process: Releasing semaphore...\n");
 
-        // Release the semaphore
         if (sem_post(sem) == -1) {
             perror("sem_post");
             exit(EXIT_FAILURE);
         }
 
         printf("Child process: Semaphore released!\n");
-    } else { // Parent process
+    } else { 
         printf("Parent process: Waiting for semaphore...\n");
 
-        // Wait for the semaphore
         if (sem_wait(sem) == -1) {
             perror("sem_wait");
             exit(EXIT_FAILURE);
@@ -55,7 +50,6 @@ int main() {
         printf("Parent process: Semaphore acquired!\n");
         printf("Parent process: Releasing semaphore...\n");
 
-        // Release the semaphore
         if (sem_post(sem) == -1) {
             perror("sem_post");
             exit(EXIT_FAILURE);
@@ -64,7 +58,6 @@ int main() {
         printf("Parent process: Semaphore released!\n");
     }
 
-    // Close and unlink the semaphore
     if (sem_close(sem) == -1) {
         perror("sem_close");
         exit(EXIT_FAILURE);
