@@ -1,75 +1,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define BUFFER_SIZE 1024
 
-int main() {
-    int pipefd[2];
-    pid_t pid;
-    char buffer[BUFFER_SIZE];
-    FILE *file;
-    ssize_t bytes_read;
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
-    // Create the pipe
-    if (pipe(pipefd) == -1) {
+    FILE *file = fopen(argv[1], "rb");
+    if (file == NULL) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+
+    int pipe_fd[2];
+    if (pipe(pipe_fd) == -1) {
         perror("pipe");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
-    // Fork a child process
-    pid = fork();
-
-    if (pid < 0) {
+    pid_t pid = fork();
+    if (pid == -1) {
         perror("fork");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
-    if (pid > 0) {  // Parent process
-        close(pipefd[0]); // Close the read end of the pipe in the parent
+    if (pid == 0) {
 
-        // Open the file for reading
-        file = fopen("input.txt", "r");
-        if (file == NULL) {
-            perror("fopen");
-            exit(EXIT_FAILURE);
-        }
+        close(pipe_fd[1]); 
 
-        // Read from the file and write to the pipe
+        dup2(pipe_fd[0], STDIN_FILENO);
+
+        execlp("cat", "cat", NULL);
+        perror("execlp");
+        return EXIT_FAILURE;
+    } else {
+
+        close(pipe_fd[0]); 
+
+        char buffer[BUFFER_SIZE];
+        size_t bytes_read;
+
         while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
-            write(pipefd[1], buffer, bytes_read);
+            write(pipe_fd[1], buffer, bytes_read);
         }
 
-        // Close the write end of the pipe in the parent
-        close(pipefd[1]);
-        fclose(file);
-    } else { // Child process
-        close(pipefd[1]); // Close the write end of the pipe in the child
+        close(pipe_fd[1]);
 
-        // Open a new file for writing
-        file = fopen("output.txt", "w");
-        if (file == NULL) {
-            perror("fopen");
-            exit(EXIT_FAILURE);
-        }
-
-        // Read from the pipe and write to the file
-        while ((bytes_read = read(pipefd[0], buffer, BUFFER_SIZE)) > 0) {
-            fwrite(buffer, 1, bytes_read, file);
-        }
-
-        // Close the read end of the pipe in the child
-        close(pipefd[0]);
-        fclose(file);
+        wait(NULL);
     }
 
-    return 0;
+    fclose(file);
+    return EXIT_SUCCESS;
 }
 
-
-
-
-
-//Execution cmd:
-//gcc your_program_name.c -o your_program_name
-//./your_program_name
+//create a file input.txt add data
+//run as ./a.out input.txt
